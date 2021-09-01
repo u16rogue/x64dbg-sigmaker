@@ -1,8 +1,6 @@
 #include "global.h"
 #include "sigmaker.h"
 
-#define PLUG_EXPORT extern "C" __declspec(dllexport)
-
 PLUG_EXPORT BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
     if (ul_reason_for_call == DLL_PROCESS_ATTACH)
@@ -53,32 +51,29 @@ PLUG_EXPORT void CBMENUENTRY(CBTYPE cbType, PLUG_CB_MENUENTRY *info)
         case menu_entry::MAKE_AOB:
         {
             SELECTIONDATA sd;
-            if (GuiSelectionGet(GUISELECTIONTYPE::GUI_DISASSEMBLY, &sd))
-            {
-                sig_vec signature;
-                if (sig_make(sd.start, signature))
-                {
-                    std::string sig_str;
-                    if (sig_vec2str(signature, sig_str))
-                    {
-                        char buffer[256];
-                        sprintf_s(buffer, "\n[" PLUG_NAME "] 0x%x = %s\n", sd.start, sig_str.c_str());
-                        GuiAddLogMessage(buffer);
-                    }
-                    else
-                    {
-                        W_PLUG_LOG_S("Failed to convert signature to specified style.");
-                    }
-                }
-                else
-                {
-                    W_PLUG_LOG_S("Failed to generate a signature!");
-                }
-            }
-            else
+            if (!GuiSelectionGet(GUISELECTIONTYPE::GUI_DISASSEMBLY, &sd))
             {
                 W_PLUG_LOG_S("Failed to obtain disassembly selection data.");
+                return;
             }
+
+            sig_vec signature;
+            if (!sig_make(sd.start, signature))
+            {
+                W_PLUG_LOG_S("Failed to generate a signature!");
+                return;
+            }
+
+            std::string sig_str;
+            if (!sig_vec2str(signature, sig_str))
+            {
+                W_PLUG_LOG_S("Failed to convert signature to specified style.");
+                return;
+            }
+
+            char buffer[256];
+            sprintf_s(buffer, "\n[" PLUG_NAME "] 0x%x = %s\n", sd.start, sig_str.c_str());
+            GuiAddLogMessage(buffer);
 
             break;
         }
