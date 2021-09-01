@@ -1,16 +1,5 @@
-
-#if defined(_M_IX86)
-    #pragma comment(lib, "../pluginsdk/x32bridge.lib")
-    #pragma comment(lib, "../pluginsdk/x32dbg.lib")
-#elif defined(_M_X64)
-    #pragma comment(lib, "../pluginsdk/x64bridge.lib")
-    #pragma comment(lib, "../pluginsdk/x64dbg.lib")
-#endif
-
-#include <Windows.h>
-#include <pluginsdk/_plugins.h>
-#include <string.h>
 #include "global.h"
+#include "sigmaker.h"
 
 #define PLUG_EXPORT extern "C" __declspec(dllexport)
 
@@ -22,23 +11,82 @@ PLUG_EXPORT BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LP
     return TRUE;
 }
 
-PLUG_EXPORT bool pluginit(PLUG_INITSTRUCT *initStruct)
+PLUG_EXPORT bool pluginit(PLUG_INITSTRUCT *init)
 {
-    initStruct->pluginVersion = 1;
-    initStruct->sdkVersion    = PLUG_SDKVERSION;
-    strcpy_s(initStruct->pluginName, "x64dbg_sigmaker");
-    global::plugin_handle = initStruct->pluginHandle;
+    init->pluginVersion = PLUG_VERSION;
+    init->sdkVersion    = PLUG_SDKVERSION;
+    strcpy_s(init->pluginName, PLUG_NAME);
+    global::plugin_handle = init->pluginHandle;
 
     return true;
 }
 
-PLUG_EXPORT bool plugsetup(PLUG_SETUPSTRUCT *setupStruct)
+PLUG_EXPORT bool plugsetup(PLUG_SETUPSTRUCT *setup)
 {
-    global::dlg         = setupStruct->hwndDlg;
-    global::menu        = setupStruct->hMenu;
-    global::menu_disasm = setupStruct->hMenuDisasm;
-    global::menu_dump   = setupStruct->hMenuDump;
-    global::menu_stack  = setupStruct->hMenuStack;
+    global::dlg         = setup->hwndDlg;
+    global::menu        = setup->hMenu;
+    global::menu_disasm = setup->hMenuDisasm;
+    global::menu_dump   = setup->hMenuDump;
+    global::menu_stack  = setup->hMenuStack;
+
+    _plugin_menuaddentry(setup->hMenuDisasm, menu_entry::MAKE_AOB,  "Make: AOB");
+    _plugin_menuaddentry(setup->hMenuDisasm, menu_entry::MAKE_IDA,  "Make: IDA");
+    _plugin_menuaddentry(setup->hMenuDisasm, menu_entry::MAKE_IDA2, "Make: IDA (Double wildcard)");
 
     return true;
 }
+
+#pragma warning(disable: 26812)
+
+PLUG_EXPORT void CBMENUENTRY(CBTYPE cbType, PLUG_CB_MENUENTRY *info)
+{
+    bool (*sig_vec2str)(sig_vec &, std::string &) = sig_vec2aob;
+
+    switch (info->hEntry)
+    {
+        case menu_entry::MAKE_IDA2:
+            sig_vec2str = sig_vec2ida2;
+            [[fallthrough]];
+        case menu_entry::MAKE_IDA:
+            sig_vec2str = sig_vec2ida;
+            [[fallthrough]];
+        case menu_entry::MAKE_AOB:
+        {
+            SELECTIONDATA sd;
+            if (GuiSelectionGet(GUISELECTIONTYPE::GUI_DISASSEMBLY, &sd))
+            {
+                sig_vec signature;
+                if (sig_make(sd.start, signature))
+                {
+                    std::string sig_str;
+                    if (sig_vec2str(signature, sig_str))
+                    {
+                        char buffer[256];
+                        sprintf_s(buffer, "\n[" PLUG_NAME "] 0x%x = %s\n", sd.start, sig_str.c_str());
+                        GuiAddLogMessage(buffer);
+                    }
+                    else
+                    {
+                        W_PLUG_LOG_S("Failed to convert signature to specified style.");
+                    }
+                }
+                else
+                {
+                    W_PLUG_LOG_S("Failed to generate a signature!");
+                }
+            }
+            else
+            {
+                W_PLUG_LOG_S("Failed to obtain disassembly selection data.");
+            }
+
+            break;
+        }
+
+        default:
+            W_PLUG_LOG_S("No menu entry matched.");
+            break;
+    }
+}
+
+#pragma warning(default: 26812)
