@@ -2,6 +2,7 @@
 
 #include "global.h"
 #include <vector>
+#include <distorm.h>
 
 #define PLUG_NAME "Signature Maker"
 #define PLUG_VERSION 1

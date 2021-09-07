@@ -5,7 +5,13 @@ VisualStudioVersion = 16.0.31229.75
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "x64dbg-sigmaker", "x64dbg-sigmaker\x64dbg-sigmaker.vcxproj", "{08EDEACC-DB97-476B-84ED-57DF21BFDDF1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "distorm", "distorm\distorm.vcxitems", "{FF61B86F-172B-4C0A-8302-E1D27A4AB413}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		distorm\distorm.vcxitems*{08edeacc-db97-476b-84ed-57df21bfddf1}*SharedItemsImports = 4
+		distorm\distorm.vcxitems*{ff61b86f-172b-4c0a-8302-e1d27a4ab413}*SharedItemsImports = 9
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86

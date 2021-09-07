@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{ff61b86f-172b-4c0a-8302-e1d27a4ab413}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)config.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)decoder.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)distorm.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)instructions.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)insts.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mnemonics.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)operands.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)prefix.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)textdefs.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)wstring.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)x86defs.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)decoder.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)distorm.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)instructions.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)insts.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)mnemonics.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)operands.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)prefix.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)textdefs.c" />
+  </ItemGroup>
+</Project>
