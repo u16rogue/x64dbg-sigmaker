@@ -38,9 +38,7 @@ PLUG_EXPORT bool plugsetup(PLUG_SETUPSTRUCT *setup)
 
 PLUG_EXPORT void CBMENUENTRY(CBTYPE cbType, PLUG_CB_MENUENTRY *info)
 {
-    bool (*sig_vec2str)(sig_vec &, std::string &) = sig_vec2aob;
-
-    switch (info->hEntry)
+    switch (bool (*sig_vec2str)(sig_vec &, std::string &) = sig_vec2aob; info->hEntry)
     {
         case menu_entry::MAKE_IDA2:
             sig_vec2str = sig_vec2ida2;
