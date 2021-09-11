@@ -75,7 +75,7 @@ static std::tuple<std::unique_ptr<std::uint8_t[]>, duint, duint> load_module_mem
 
 // Decomposes the array of bytes that represent the instructions and returns the decomposed instructions and number
 // of instructions decomposed.
-static std::tuple<std::unique_ptr<_DInst[]>, unsigned int> decompose_instructions(std::uint8_t *ins_buffer, int nbytes_to_decompose, std::size_t ninst_to_store)
+static std::tuple<std::unique_ptr<_DInst[]>, unsigned int> decompose_instructions(std::uint8_t *ins_buffer, int nbytes_to_decompose, int ninst_to_store)
 {
 	auto dinst_buff = std::make_unique<_DInst[]>(ninst_to_store);
 	if (!dinst_buff)
@@ -120,10 +120,30 @@ static std::tuple<std::unique_ptr<_DInst[]>, unsigned int> decompose_instruction
 	return std::make_tuple(std::move(dinst_buff), inst_count);
 }
 
+static std::uint8_t *sig_scan(std::uint8_t *buffer, duint rva, sig_vec &pattern)
+{
+	const auto pat_size = pattern.size();
+	// use the RVA as the size of the module as there is no need to scan beyond the RVA for patterns
+	for (duint i_buff = 0; i_buff <= rva; i_buff++)
+	{
+		for (std::size_t i_patt = 0; i_patt < pat_size; i_patt++)
+		{
+			if (pattern[i_patt].mask == false)
+				continue;
+
+			if (buffer[i_buff + i_patt] != pattern[i_patt].byte)
+				break;
+
+			if (i_patt == (pat_size - 1))
+				return buffer + i_buff;
+		}
+	}
+
+	return nullptr;
+}
+
 bool sig_make(duint address, sig_vec &out_result)
 {
-	constexpr auto read_len = 20; // Number of bytes to for the signature
-
 	auto paddress = reinterpret_cast<std::uint8_t *>(address);
 
 	// Read instruction from the process that's being debugged
@@ -136,7 +156,7 @@ bool sig_make(duint address, sig_vec &out_result)
 
 	std::uint8_t *trans_va = &mod_buff[rva]; // translated virtual address based off the local buffer using the RVA from the original virtual address in the target process
 
-	auto [decomp_ins, decomp_count] = decompose_instructions(trans_va, read_len, read_len);
+	auto [decomp_ins, decomp_count] = decompose_instructions(trans_va, NBYTES_TO_SIG, NBYTES_TO_SIG /* this is bloat, a proper impl would be to check how many instructions are there first. */);
 	if (!decomp_ins || !decomp_count)
 	{
 		W_PLUG_LOG_S("Failed to decompose instructions.");
@@ -144,6 +164,7 @@ bool sig_make(duint address, sig_vec &out_result)
 	}
 
 	// Instruction parsing
+	sig_vec full_pattern;
 	for (auto i_ins = 0ul; i_ins < decomp_count; i_ins++)
 	{
 		const _DInst &inst = decomp_ins[i_ins];
@@ -159,14 +180,28 @@ bool sig_make(duint address, sig_vec &out_result)
 		for (auto i_ins_b = 0ul; i_ins_b < inst.size; i_ins_b++)
 		{
 			if (i_ins_b < inst.size - c_wildcard)
-				out_result.emplace_back(trans_va[i_ins_b], true);
+				full_pattern.emplace_back(trans_va[i_ins_b], true);
 			else
-				out_result.emplace_back(0x00, false);
+				full_pattern.emplace_back(0x00, false);
 		}
 		trans_va += inst.size;
 	}
 
-	return true;
+	// Pattern testing
+	trans_va = &mod_buff[rva];
+	for (auto &patt : full_pattern)
+	{
+		// Slowly copy full_pattern to out_result until we get a unique signature
+		out_result.emplace_back(patt);
+
+		if (patt.mask == false)
+			continue;
+
+		if (sig_scan(mod_buff.get(), rva, out_result) == trans_va)
+			return true;
+	}
+
+	return false;
 }
 
 bool sig_vec2aob(sig_vec &sig, std::string &out_result)

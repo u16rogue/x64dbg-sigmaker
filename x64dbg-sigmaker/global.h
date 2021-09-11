@@ -23,3 +23,5 @@ namespace global
     inline static int     menu_dump;
     inline static int     menu_stack;
 }
+
+#define NBYTES_TO_SIG 30 // Number of maximum bytes to generate a signature from
