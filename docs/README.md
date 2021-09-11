@@ -4,6 +4,8 @@ An [x64dbg](https://x64dbg.com/#start) plugin to generate unique signatures in d
 
 [[Download](https://github.com/u16rogue/x64dbg-sigmaker/releases)]
 
+*(The result is printed on the log window, you can c+p the entire signature there)*
+
 ## Supported styles
 * AOB - Array of bytes plus mask (`\xE9\x00\x00\x00\x00 x????`)
 * IDA - IDA style signature (`E9 ? ? ? ?`)
