@@ -10,7 +10,7 @@ An [x64dbg](https://x64dbg.com/#start) plugin to generate unique signatures in d
 ## Supported styles
 * AOB - Array of bytes plus mask (`\xE9\x00\x00\x00\x00 x????`)
 * IDA - IDA style signature (`E9 ? ? ? ?`)
-* IDA2 - IDA style signature but wildcards use 2 wildcard `?` (`E9 ?? ?? ?? ??`)
+* IDA2 - IDA style signature but wildcards use 2 `?` (`E9 ?? ?? ?? ??`)
 
 ## Libraries
 * [distorm](https://github.com/gdabah/distorm)
