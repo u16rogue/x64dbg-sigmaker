@@ -69,8 +69,14 @@ PLUG_EXPORT void CBMENUENTRY(CBTYPE cbType, PLUG_CB_MENUENTRY *info)
                 return;
             }
 
+            #ifdef _M_IX86
+                #define RES_HEX_FMT "0x%lx"
+            #elif _M_X64
+                #define RES_HEX_FMT "0x%llx"
+            #endif
+
             char buffer[256];
-            sprintf_s(buffer, "\n[" PLUG_NAME "] 0x%x = %s\n", sd.start, sig_str.c_str());
+            sprintf_s(buffer, "\n[" PLUG_NAME "] " RES_HEX_FMT " = %s\n", sd.start, sig_str.c_str());
             GuiAddLogMessage(buffer);
 
             break;

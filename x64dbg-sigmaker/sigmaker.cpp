@@ -227,6 +227,8 @@ bool sig_vec2ida(sig_vec &sig, std::string &out_result)
 	return true;
 }
 
+// TODO: Can merge sig_vec2ida2 and sig_vec2ida
+
 bool sig_vec2ida2(sig_vec &sig, std::string &out_result)
 {
 	const auto sig_s = sig.size();
