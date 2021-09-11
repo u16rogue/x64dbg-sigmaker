@@ -1,10 +1,10 @@
 #include "sigmaker.h"
 
 #include <pluginsdk/_scriptapi.h>
-#include <distorm.h>
 #include <mnemonics.h>
 #include <array>
 #include <string>
+#include <memory>
 
 #pragma warning (disable: 26812)
 
@@ -41,25 +41,57 @@ static std::size_t determine_operand_wildcard_count(const _DInst &instruction)
 	return byte_count;
 }
 
+// Takes the starting address of the pattern, determines which module it belongs in the target process, determines the size
+// of the module, reads the entire module into a buffer, then returns a tuple containing the buffer, the size of the buffer, and the RVA of address.
+// <module buffer, module size, RVA of va_addr >
+static std::tuple<std::unique_ptr<std::uint8_t[]>, duint, duint> load_module_memory_to_buffer(duint va_addr)
+{
+	// Determine which module the address belongs to and determine the size of the module
+	duint mod_size = 0;
+	duint mod_base = DbgMemFindBaseAddr(va_addr, &mod_size);
+	if (!mod_base || !mod_size)
+	{
+		W_PLUG_LOG_S("load_module_memory_to_buffer ## Failed to find module.");
+		return { nullptr, 0, 0 };
+	}
+
+	// Create the buffer
+	auto buffer = std::make_unique<std::uint8_t[]>(mod_size);
+	if (!buffer)
+	{
+		W_PLUG_LOG_S("load_module_memory_to_buffer ## Failed to allocate module buffer.");
+		return { nullptr, 0, 0 };
+	}
+
+	// Load the entire module from the target process into the buffer
+	if (!DbgMemRead(mod_base, buffer.get(), mod_size))
+	{
+		W_PLUG_LOG_S("load_module_memory_to_buffer ## Failed to read module to buffer.");
+		return { nullptr, 0, 0 };
+	}
+
+	return std::make_tuple(std::move(buffer), mod_size, va_addr - mod_base);
+}
+
 bool sig_make(duint address, sig_vec &out_result)
 {
+	constexpr auto read_len = 20; // Number of bytes to for the signature
+
 	auto paddress = reinterpret_cast<std::uint8_t *>(address);
 
 	// Read instruction from the process that's being debugged
-	constexpr auto read_len = 20; // Number of bytes to read from the target process
-	std::array<std::uint8_t, read_len> dbg_read_buff;
-	if (!DbgMemRead(address, dbg_read_buff.data(), read_len))
+	auto [mod_buff, mod_size, rva] = load_module_memory_to_buffer(address);
+	if (!mod_buff || !mod_size || !rva)
 	{
-		W_PLUG_LOG_S("Failed to read memory of target process.");
 		return false;
 	}
 
-	std::array<_DInst, 15> decomp      = { 0 };
+	std::array<_DInst, read_len> decomp      = { 0 };
 	unsigned int           inst_count  = 0;
 	_CodeInfo ci =
 	{
 		.codeOffset = 0,
-		.code       = dbg_read_buff.data(),
+		.code       = &mod_buff[rva],
 		.codeLen    = read_len,
 
 		#ifdef _M_IX86
@@ -126,6 +158,10 @@ bool sig_make(duint address, sig_vec &out_result)
 
 		const auto c_wildcard = determine_operand_wildcard_count(inst);
 		// TODO: start filling up patterns
+		for (auto i_ins_b = 0; i_ins_b < inst.size; i_ins_b++)
+		{
+
+		}
 	}
 
 	return true;
