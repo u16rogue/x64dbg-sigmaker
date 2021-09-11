@@ -176,7 +176,7 @@ bool sig_make(duint address, sig_vec &out_result)
 		}
 
 		const auto c_wildcard = determine_operand_wildcard_count(inst);
-		// TODO: start filling up patterns
+		
 		for (auto i_ins_b = 0ul; i_ins_b < inst.size; i_ins_b++)
 		{
 			if (i_ins_b < inst.size - c_wildcard)
