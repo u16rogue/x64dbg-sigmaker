@@ -75,7 +75,7 @@ static std::tuple<std::unique_ptr<std::uint8_t[]>, duint, duint> load_module_mem
 
 // Decomposes the array of bytes that represent the instructions and returns the decomposed instructions and number
 // of instructions decomposed.
-static std::tuple<std::unique_ptr<_DInst[]>, std::size_t> decompose_instructions(std::uint8_t *ins_buffer, int nbytes_to_decompose, std::size_t ninst_to_store)
+static std::tuple<std::unique_ptr<_DInst[]>, unsigned int> decompose_instructions(std::uint8_t *ins_buffer, int nbytes_to_decompose, std::size_t ninst_to_store)
 {
 	auto dinst_buff = std::make_unique<_DInst[]>(ninst_to_store);
 	if (!dinst_buff)
@@ -150,21 +150,13 @@ bool sig_make(duint address, sig_vec &out_result)
 
 		if (inst.flags == FLAG_NOT_DECODABLE)
 		{
-			// we don't care if the last instruction can't be decoded since we can just discard it
-			if (i_ins == decomp_count - 1)
-			{
-				W_PLUG_LOG_S("Couldn't decode message but can be ignored.");
-				continue;
-			}
-
-			// it only matters when it could affect the resulting pattern
-			W_PLUG_LOG_S("Couldn't decode message!");
-			return false;
+			W_PLUG_LOG_S("Couldn't decode message! Ending instruction parsing.");
+			break;
 		}
 
 		const auto c_wildcard = determine_operand_wildcard_count(inst);
 		// TODO: start filling up patterns
-		for (auto i_ins_b = 0; i_ins_b < inst.size; i_ins_b++)
+		for (auto i_ins_b = 0ul; i_ins_b < inst.size; i_ins_b++)
 		{
 			if (i_ins_b < inst.size - c_wildcard)
 				out_result.emplace_back(trans_va[i_ins_b], true);
@@ -205,7 +197,7 @@ bool sig_vec2aob(sig_vec &sig, std::string &out_result)
 bool sig_vec2ida(sig_vec &sig, std::string &out_result)
 {
 	const auto sig_s = sig.size();
-	for (auto i = 0; i < sig_s; i++)
+	for (std::size_t i = 0; i < sig_s; i++)
 	{
 		const auto &s = sig[i];
 
@@ -232,7 +224,7 @@ bool sig_vec2ida(sig_vec &sig, std::string &out_result)
 bool sig_vec2ida2(sig_vec &sig, std::string &out_result)
 {
 	const auto sig_s = sig.size();
-	for (auto i = 0; i < sig_s; i++)
+	for (std::size_t i = 0; i < sig_s; i++)
 	{
 		const auto &s = sig[i];
 
