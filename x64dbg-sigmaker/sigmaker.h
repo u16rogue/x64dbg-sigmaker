@@ -26,6 +26,15 @@ struct sig_frag
 {
     std::uint8_t byte;
     bool mask;
+
+    sig_frag() : sig_frag(0, false){
+        
+    }
+
+    sig_frag(std::uint8_t byte, bool mask) {
+        this->byte = byte;
+        this->mask = mask;
+    }
 };
 
 using sig_vec = std::vector<sig_frag>;
