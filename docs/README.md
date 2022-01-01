@@ -7,7 +7,7 @@ An [x64dbg](https://x64dbg.com/#start) plugin to generate unique signatures in d
 
 *(The result is printed on the log window, you can c+p the entire signature there.)*
 
-*also a bug: i forgot to fix the switch case when i refactored the code so selecting `IDA2` will get overridden by the `IDA` option...*
+~~also a bug: i forgot to fix the switch case when i refactored the code so selecting `IDA2` will get overridden by the `IDA` option...~~
 
 ## Supported styles
 * AOB - Array of bytes plus mask (`\xE9\x00\x00\x00\x00 x????`)
