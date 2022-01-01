@@ -38,54 +38,58 @@ PLUG_EXPORT bool plugsetup(PLUG_SETUPSTRUCT *setup)
 
 PLUG_EXPORT void CBMENUENTRY(CBTYPE cbType, PLUG_CB_MENUENTRY *info)
 {
-    switch (bool (*sig_vec2str)(sig_vec &, std::string &) = sig_vec2aob; info->hEntry)
+    bool (*sig_vec2str)(sig_vec&, std::string&);
+    switch (info->hEntry)
     {
         case menu_entry::MAKE_IDA2:
             sig_vec2str = sig_vec2ida2;
-            [[fallthrough]];
+            break;
         case menu_entry::MAKE_IDA:
             sig_vec2str = sig_vec2ida;
-            [[fallthrough]];
-        case menu_entry::MAKE_AOB:
-        {
-            SELECTIONDATA sd;
-            if (!GuiSelectionGet(GUISELECTIONTYPE::GUI_DISASSEMBLY, &sd))
-            {
-                W_PLUG_LOG_S("Failed to obtain disassembly selection data.");
-                return;
-            }
-
-            sig_vec signature;
-            if (!sig_make(sd.start, signature))
-            {
-                W_PLUG_LOG_S("Failed to generate a signature!");
-                return;
-            }
-
-            std::string sig_str;
-            if (!sig_vec2str(signature, sig_str))
-            {
-                W_PLUG_LOG_S("Failed to convert signature to specified style.");
-                return;
-            }
-
-            #ifdef _M_IX86
-                #define RES_HEX_FMT "0x%lx"
-            #elif _M_X64
-                #define RES_HEX_FMT "0x%llx"
-            #endif
-
-            char buffer[256];
-            sprintf_s(buffer, "\n[" PLUG_NAME "] " RES_HEX_FMT " = %s\n", sd.start, sig_str.c_str());
-            GuiAddLogMessage(buffer);
-
             break;
-        }
-
+        case menu_entry::MAKE_AOB:
+            sig_vec2str = sig_vec2aob;
+            break;
         default:
-            W_PLUG_LOG_S("No menu entry matched.");
+            sig_vec2str = nullptr;
             break;
     }
+
+    if (sig_vec2str == nullptr) {
+        W_PLUG_LOG_S("No menu entry matched.");
+        return;
+    }
+
+    SELECTIONDATA sd;
+    if (!GuiSelectionGet(GUISELECTIONTYPE::GUI_DISASSEMBLY, &sd))
+    {
+        W_PLUG_LOG_S("Failed to obtain disassembly selection data.");
+        return;
+    }
+
+    sig_vec signature;
+    if (!sig_make(sd.start, signature))
+    {
+        W_PLUG_LOG_S("Failed to generate a signature!");
+        return;
+    }
+
+    std::string sig_str;
+    if (!sig_vec2str(signature, sig_str))
+    {
+        W_PLUG_LOG_S("Failed to convert signature to specified style.");
+        return;
+    }
+
+    #ifdef _M_IX86
+    #define RES_HEX_FMT "0x%lx"
+    #elif _M_X64
+    #define RES_HEX_FMT "0x%llx"
+    #endif
+
+    char buffer[256];
+    sprintf_s(buffer, "\n[" PLUG_NAME "] " RES_HEX_FMT " = %s\n", sd.start, sig_str.c_str());
+    GuiAddLogMessage(buffer);
 }
 
 #pragma warning(default: 26812)
